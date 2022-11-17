@@ -1,0 +1,615 @@
+CPU "8051.TBL" 			
+INCL"8051.INC"
+
+PA: EQU 4000H		; Setup 8255 as input and output port, where Port A address 4000H
+PB: EQU 4001H		; Port B address = 4001H
+PC: EQU 4002H		; Port C address = 4002H
+PCTR: EQU 4003H		; Control address = 4003H
+
+ORG 2000H
+
+MOV SP, #040H           	 ; Load stack pointer at 040H
+MOV A, #10000001B	 ; Port A=Output, Port B=Output, Port  C upper=output, PC lower= input
+MOV DPTR, #PCTR
+MOVX @DPTR, A
+
+                                          ; Pre-set 4 digit password was stored at 60H to 64H, which is "4567C"
+MOV 60H, #12H		; First digit ‘4’ was stored at 60H
+MOV 61H, #22H		; Second digit ‘5’ was stored at 61H
+MOV 62H, #42H		; Third digit ‘6’ was stored at 62H
+MOV 63H, #14H		; Fourth digit ‘7’ was stored at 63H
+MOV 64H, #83H                 ; Fifth digit ‘C’ was stored at 63H
+;****************************************			
+;                           Button Display 
+;****************************************
+BUTTON1:        CJNE A, #11H, BUTTON2	        ; Check if button "1" on keypad is pressed
+		MOV A, #"1"	    ; Display "1" on LCD if button "1" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #11H		; For purpose of data storage in next step 
+		RET
+
+BUTTON2:	CJNE A, #21H, BUTTON3	; Check if keypad button "2" is pressed
+		MOV A, #"2"	         ; Display "2" on LCD if button "2" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #21H		; For purpose of data storage in next step 
+		RET
+
+BUTTON3:	CJNE A, #41H, BUTTON4	; Check if keypad button "3" is pressed
+		MOV A, #"3"	     ; Display "3" on LCD if button "3" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #41H		; For purpose of data storage in next step 
+		RET
+
+BUTTON4:	CJNE A, #12H, BUTTON5	; Check if keypad button "4" is pressed
+		MOV A, #"4"	     ; Display "4" on LCD if button "4" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #12H		; For purpose of data storage in next step 
+		RET
+
+BUTTON5:	CJNE A, #22H, BUTTON6	; Check if keypad button "5" is pressed
+		MOV A, #"5"	     ; Display "5" on LCD if button "5" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #22H		; For purpose of data storage in next step 
+		RET
+
+BUTTON6:	CJNE A, #42H, BUTTON7	; Check if keypad button "6" is pressed
+		MOV A, #"6"	     ; Display "6" on LCD if button "6" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #42H		; For purpose of data storage in next step 
+		RET
+
+BUTTON7:	CJNE A, #14H, BUTTON8	; Check if keypad button "7" is pressed
+		MOV A, #"7"	         ; Display "7" on LCD if button "7" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #14H		; For purpose of data storage in next step 
+		RET
+	
+BUTTON8:	CJNE A, #24H, BUTTON9	; Check if keypad button "8" is pressed
+		MOV A, #"8"	         ; Display "8" on LCD if button "8" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #24H		; For purpose of data storage in next step 
+		RET
+
+BUTTON9:	CJNE A, #44H, BUTTON0	; Check if keypad button "9" is pressed
+		MOV A, #"9"	    ; Display "9" on LCD if button "9" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #44H		; For purpose of data storage in next step 
+		RET
+
+BUTTON0:	CJNE A, #28H, BUTTONA	; Check if keypad button "0" is pressed
+		MOV A, #"0"	     ; Display "0" on LCD if button "0" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #28H		; For purpose of data storage in next step 
+		RET				
+
+BUTTONA:	CJNE A, #81H, BUTTONB	; Check if keypad button "A" is pressed
+		MOV A, #"A"	       ; Display "A" on LCD if button "A" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #81H		; For purpose of data storage in next step 
+		RET
+				
+BUTTONB:	CJNE A, #82H, BUTTONC	; Check if keypad button "B" is pressed
+		MOV A, #"B"	        ; Display "B" on LCD if button "B" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #82H		; For purpose of data storage in next step 
+		RET	
+			
+BUTTONC:	CJNE A, #84H, BUTTOND	; Check if keypad button "C" is pressed
+		MOV A, #"C"	        ; Display "C" on LCD if button "C" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #84H	              ; For purpose of data storage in next step 
+		RET
+				
+BUTTOND:	CJNE A, #88H, BT2		; Check if keypad button "D" is pressed
+		MOV A, #"D"	       ; Display "D" on LCD if button "D" is pressed
+		ACALL DATAWRT
+		ACALL DELAY
+		MOV A, #88H		; For purpose of data storage in next step 
+		RET				
+
+BT2:	CJNE A, #18H, BT3		; Check if keypad button "*" is pressed
+	ACALL LCD_ON			 
+	ACALL LINE_ONE    		; Force cursor on LCD to first line
+	MOV DPTR, #INVALID            ; Display "INVALID" on LCD if button "*" is pressed
+	ACALL WORD_STRING
+	ACALL DATAWRT
+	ACALL DELAY
+	LJMP MAIN
+
+BT3:	CJNE A, #48H, BT1		; Check if keypad button "#" is pressed
+	ACALL LCD_ON			 
+	ACALL LINE_ONE    		; Force cursor on LCD to first line
+	MOV DPTR, #INVALID	; Display "INVALID" on LCD if button "#" is pressed
+	ACALL WORD_STRING	
+	ACALL DATAWRT
+	ACALL DELAY
+	LJMP MAIN
+BT1:	LJMP BUTTON1
+
+;*********************************
+;                  LCD Interface  
+;**********************************
+LCD_ON:	MOV A, #38H			; 2 lines and 5x7 matrix
+ 		ACALL COMNWRT
+		ACALL DELAY	
+		MOV A, #0FH			; Display on, cursor blinking
+		ACALL COMNWRT
+		ACALL DELAY
+		MOV A, #01H			; Clear display screen
+		ACALL COMNWRT
+		ACALL DELAY
+		MOV A, #06H			; Shift cursor to right
+		ACALL COMNWRT
+		ACALL DELAY 
+		RET
+
+LINE_ONE:	MOV A, #80H			; Force cursor to first line
+		ACALL COMNWRT
+		ACALL DELAY
+		RET
+
+SND_LINE:	MOV A, #0C3H		; Force cursor to second line
+		ACALL COMNWRT
+		ACALL DELAY
+		RET
+
+SND_LINE1:	MOV A, #0C0H
+		ACALL COMNWRT
+		ACALL DELAY
+		RET
+
+LINE_PW:	MOV A, #0CBH		; Force cursor to 12th place of line 2
+		ACALL COMNWRT
+		ACALL DELAY
+		RET
+
+COMNWRT:	MOV DPTR, #PA			; Copy from Accumulator to PA
+		MOVX @DPTR, A
+		CLR P1.0			; RS=0 for command
+		CLR P1.1			; R/W=0 for write
+		SETB P1.2			; E=1 for high pulse
+		ACALL DELAY
+		CLR P1.2			; E=0 for H-to-L pulse
+		RET				
+
+DATAWRT:	PUSH DPH				; To push DPTR (16 bits) 
+		PUSH DPL
+		MOV DPTR, #PA		; Copy from Accumulator to PA
+		MOVX @DPTR, A	
+		SETB P1.0			; RS=1 for data
+		CLR P1.1			; R/W=0 for write
+		SETB P1.2			; E=1 for high pulse
+		ACALL DELAY
+		CLR P1.2			; E=0 for H-to-L pulse
+		POP DPL			; To pop DPTR (16 bits)
+		POP DPH
+		RET				
+
+
+;********************************
+;   Enter Password 
+;********************************
+
+START:	MOV 55H, #3
+
+MAIN:	MOV IE, #10000000B	        ; Disable Interrupt 0 (INT0)
+           ACALL LCD_ON	                   ; Start LCD operation
+	ACALL LINE_ONE    	        ; Force cursor on LCD to first line
+	MOV DPTR, #WEL_MSG	        ; Display welcome message
+	ACALL WORD_STRING
+	ACALL DELAY
+	ACALL LCD_ON	                   ; Start LCD operation
+	ACALL LINE_ONE    	         ; Force cursor on LCD to first line
+	MOV DPTR, #ENTER_CODE      ; Display instruction to enter password 
+	ACALL WORD_STRING
+	ACALL LINE_PW		          ; Force cursor to 12th place on line 2
+
+MAIN2: ACALL SCAN                    ; To acquire first input from keypad
+	   ACALL BUTTON1            	; To compare input and display digit on LCD
+	   MOV 65H, A		  ; Store first input digit into memory location 65H
+	   CLR A
+	  ACALL DELAY_PRESS
+	  ACALL SCAN	             ; To acquire second input from keypad
+	  ACALL BUTTON1   	  ; To compare input and display digit on LCD
+	MOV 66H, A	; Store second input digit into memory location 66H
+	CLR A
+	ACALL DELAY_PRESS
+
+	ACALL SCAN			; To acquire third input from keypad
+	ACALL BUTTON1	; To compare input and display digit on LCD
+	MOV 67H, A 		; Store third input digit into memory location 67H
+	CLR A
+	ACALL DELAY_PRESS
+
+	ACALL SCAN			; To acquire fourth input from keypad
+	ACALL BUTTON1	; To compare input and display digit on LCD
+	MOV 68H, A	             ; Store fourth input digit into memory location 68H
+	CLR A
+	ACALL DELAY_PRESS
+
+	ACALL SCAN			; To acquire fifth input from keypad
+	ACALL BUTTON1	         ; To compare input and display digit on LCD
+	MOV 69H, A		; Store fifth input digit into memory location 69H
+	CLR A
+	ACALL DELAY_PRESS
+	LJMP COMPARE			; To check password  program
+
+
+
+;********************
+;           Delay 
+;*********************
+DELAY:	MOV R1, #200		
+HERE1:	MOV R2, #250		
+HERE2:  	DJNZ R2, HERE2		
+		DJNZ R1, HERE1		
+ 		RET	
+			
+DELAY_PRESS:	MOV R1, #200		
+HERE3:		MOV R2, #255		
+HERE4:  		DJNZ R2, HERE4		
+			DJNZ R1, HERE3		
+ 			RET	
+
+DELAY_BZ:		MOV R1, #255				
+HERE5:  		MOV R2, #255
+HERE6:		DJNZ R2, HERE6		
+			DJNZ R1, HERE5		
+ 			RET	
+
+DELAY2:		MOV R1, #20				
+HS1:  			MOV R2, #100
+HS2:			MOV R3, #200	
+HS3:			DJNZ R3, HS3		
+			DJNZ R2, HS2
+			DJNZ R1, HS1
+ 			RET	
+
+DELAY_MOTOR:	SETB TR0			; Start Timer 0 
+AGAIN1:		JNB TF0, AGAIN1		; Monitor Timer 0 Flag
+			CLR TR0		; Stop Timer 0
+			CLR TF0		; Clear Timer 0 Flag
+			RET			; Return from subroutine
+
+DELAY_1SEC:	MOV   R2,#5
+		MOV   R1,#45
+DELAY_1SEC0:	DJNZ  R1,DELAY_1SEC0
+			DJNZ  R2,DELAY_1SEC0
+			RET
+
+;***************************
+; Word String on LCD 
+;***************************
+WORD_STRING:
+REPEAT:	MOV A, #00000000B
+	MOVC A, @A+DPTR		; Move data into Accumulator
+	JZ STOP			; Check whether string ends
+	ACALL DATAWRT
+	INC DPTR			; Move to the next data
+	SJMP REPEAT			; Repeat until the end of string
+STOP:	RET
+
+;***********************
+;          Keypad Interface 
+;***********************
+SCAN: 	MOV A, #11110000B		; 5V to C0, C1, C2 and C3
+	MOV DPTR, #4002H		
+	MOVX @DPTR, A			; Move Accumulator to Port C Upper
+	MOV DPTR, #4002H		; Get data input from Port C Lower to Accumulator
+	MOVX A, @DPTR
+	ANL A, #00001111B		; AND between Accumulator and input
+	JZ SCAN 			; Scan repeatedly if no input detected
+	MOV R3, #4			; Number of column = 4 for input
+	MOV R4, #00010000B		; To check input from column
+	
+SCAN_NEXT:	MOV A, R4		; Move R4 to Accumulator
+		MOV DPTR, #4002H	; Move Accumulator to PC Upper
+		MOVX @DPTR, A
+		MOV DPTR, #4002H	; Get input from PC Lower to Accumulator
+		MOVX A, @DPTR
+		ANL A, #00001111B	; AND between Accumulator and Immediate data #00001111B
+		JZ NEXT_COL		; Jump to NEXT_COL if no input
+		ORL A, R4		; OR with R4	
+		RET			
+
+NEXT_COL:	MOV A, R4			; Check the next column
+		RLC A			; Right shift immediate data in R4
+		MOV R4, A
+		DJNZ R3, SCAN_NEXT	; Decrement R3 and go to SCAN_NEXT
+		JMP SCAN		; Go back to SCAN if no input for all 4 columns
+
+;**********************
+; Compare Key in Password 
+;**********************
+COMPARE:	MOV A, 65H		; Compare first digit input with correct first digit 
+		XRL A, 60H		; X-OR between immediate data stored in 65H and 60H
+		JNZ WRONG_PWD	; Jump to WRONG Programme if incorrect 
+
+		MOV A, 66H			; Check second digit input
+		XRL A, 61H			
+		JNZ WRONG_PWD
+
+		MOV A, 67H			; Check third digit input
+		XRL A, 62H			
+		JNZ WRONG_PWD
+
+		MOV A, 68H			; Check fourth digit input
+		XRL A, 63H			
+		JNZ WRONG_PWD
+
+		MOV A, 69H			; Check fifth digit input
+		XRL A, 64H
+		JNZ WRONG_PWD
+
+		JZ CORRECT_MSG		; Jump to OPTION Programme if correct 
+
+;************************
+;            Password wrong 
+;************************
+WRONG_PWD: ACALL LCD_ON					; Display failed attempt on LCD display 
+		ACALL LINE_ONE       ; Move data from WRONG_CD and display
+		MOV DPTR, #WRONG_CD
+		ACALL WORD_STRING
+
+BUZZER0:	MOV R4, #1
+BZ0:	MOV DPTR, #PB     ; To activate buzzer connect to Port B6 to beep 3 times
+	MOV A, #11000000B
+	MOVX @DPTR, A
+	ACALL DELAY2
+            	MOV A, #00000000B
+	MOVX @DPTR, A
+ 	 ACALL DELAY2
+	DJNZ R4, BZ0				
+	DJNZ 55H, LOOP      ; Decrement of memory location 55H and jump to TRIAL if it is not zero
+
+WRG_3T:	ACALL LCD_ON	; Display "WRONG 3 TIMES" on LCD display if memory location 55H is zero 
+	ACALL LINE_ONE    	; Force cursor on LCD to first line
+	MOV DPTR, #WRONG_3T		
+	ACALL WORD_STRING
+
+LOOP:		LJMP MAIN
+
+
+;********************
+; Correct Option 
+:********************
+CORRECT_MSG:	ACALL LCD_ON
+	ACALL LINE_ONE    			; Force cursor on LCD to first line
+	MOV DPTR, #CRT_MSG
+	ACALL WORD_STRING
+
+MENU_OPTION:	ACALL LCD_ON		; Display first option to unlock case
+	ACALL LINE_ONE    		; Force cursor on LCD to first line
+	MOV DPTR, #OPEN_OPT
+	ACALL WORD_STRING
+	ACALL SND_LINE		; Display second option to reset password
+	MOV DPTR, #RESET_OPT
+	ACALL WORD_STRING
+
+	ACALL SCAN				; Acquire input from keypad
+	CJNE A,#00011000B, NOT_EQL
+	SJMP COMPARE_1	; To show invalid other than "*" and "#" is pressed
+		
+NOT_EQL:	CJNE A,#01001000B, MENU_OPTION	; Only "*" and "#" will jump to COMPARE_1
+		
+COMPARE_1:	CJNE A, #18H, COMPARE_2	; Check if keypad button "*" is pressed
+		ACALL LCD_ON	; Display instruction of entering new password
+		ACALL LINE_ONE    	          ; Force cursor on LCD to first line
+		MOV DPTR, #RESET_PW
+		ACALL WORD_STRING
+
+		ACALL LINE_PW    ; Display new password at 12th place of line 2 
+
+		ACALL SCAN		; Move first digit entered into memory location 50H
+		ACALL BUTTON1
+		MOV 50H, A
+		ACALL DELAY_PRESS
+
+		ACALL SCAN		; Move second digit entered into memory location 51H
+		ACALL BUTTON1
+		MOV 51H, A
+		ACALL DELAY_PRESS
+		
+		ACALL SCAN		; Move third digit entered into memory location 52H
+		ACALL BUTTON1
+		MOV 52H, A
+		ACALL DELAY_PRESS
+			
+		ACALL SCAN		; Move fourth digit entered into memory location 53H
+		ACALL BUTTON1
+		MOV 53H, A
+		ACALL DELAY_PRESS
+
+		ACALL SCAN		; Move fourth digit entered into memory location 54H
+		ACALL BUTTON1
+		MOV 54H, A
+		ACALL DELAY_PRESS	
+			
+		ACALL LCD_ON		; Display success in reset password
+		ACALL LINE_ONE    		; Force cursor on LCD to first line
+		MOV DPTR, #RESET_OK
+		ACALL WORD_STRING
+
+		MOV 60H, 50H		; Move new password to pre-stored password memory location
+		MOV 61H, 51H
+		MOV 62H, 52H
+		MOV 63H, 53H
+		MOV 64H, 54H
+
+		JMP MENU_OPTION	; Goes back to OPTION programme 
+
+COMPARE_2: 	CJNE A, #48H, COMPARE_1	; Check if keypad button "#" is pressed
+		ACALL LCD_ON    ; Display execution of unlocking door procedure
+		ACALL LINE_ONE    	; Force cursor on LCD to first line
+		MOV DPTR, #CASE_OPEN
+		ACALL WORD_STRING
+		ACALL SND_LINE1 
+		MOV DPTR, #WLCM_HOME
+		ACALL WORD_STRING
+		MOV 55H, #3		; Reset number of trial back to 3 again 
+		LJMP TIMER
+LJMP MAIN	
+
+; ************* Menu Display on LCD ***************
+
+WEL_MSG: DFB "GROUP14 PROJECT ",0
+
+ENTER_CODE: DFB "SECURITY CODE :",0
+
+INVALID: DFB "   --DO AGAIN--   ",0
+
+WRONG_CD: DFB "  TRY AGAIN  !",0
+
+CRT_MSG: DFB "  ACCEPTED !",0
+
+OPEN_OPT: DFB "PRESS # TO OPEN",0
+
+RESET_OPT: DFB "OR * TO RESET",0
+
+RESET_PW: DFB "INSERT NEW CODE :",0
+
+RESET_OK: DFB "RESET COMPLETED",0
+
+CASE_OPEN: DFB "OPENED!",0
+
+WLCM_HOME: DFB "WELCOME HOME!",0
+
+WRONG_3T: DFB "YOU FORGOT PSSWRT!",0
+
+CNTDWN: DFB "COUNTING DOWN TO",0
+
+SEC1: DFB "   01 SECOND   ",0
+
+SEC2: DFB "   02 SECONDS   ",0
+
+SEC3: DFB "   03 SECONDS   ",0
+
+SEC4: DFB "   04 SECONDS   ",0
+
+SEC5: DFB "   05 SECONDS   ",0
+
+FORGET: DFB "AUTOMATIC LOCK",0
+
+
+; **************Countdown Timer************
+
+TIMER:	MOV TMOD, #00000001B		; Timer 0 is used in mode 1
+	ACALL DELAY
+	MOV IE, #10000001B			; Enable Interrupt 0 (INT0)
+	SETB TCON.0
+	ACALL MOTOR_OD			; To open the door
+
+	ACALL LCD_ON	; Clear the LCD to display countdown timer
+	ACALL LINE_ONE    		; Force cursor on LCD to first line
+	MOV DPTR, #CNTDWN		; Display countdown message
+	ACALL WORD_STRING
+	ACALL DELAY 
+		
+	MOV R7,#01H			
+
+
+CD5:	ACALL SND_LINE
+	MOV DPTR,#SEC5			; Display 5th second
+	ACALL WORD_STRING
+	ACALL DELAY_1SEC
+	CJNE R7, #0H, CD4		; Check whether interrupt (INT0) was activated or not 
+	ACALL MOTOR_CD	; To close the case if it was once activated and back to    MAIN programme
+	LJMP MAIN
+
+CD4:	ACALL SND_LINE
+	MOV DPTR,#SEC4			; Display 4th second
+	ACALL WORD_STRING
+	ACALL DELAY_1SEC
+	CJNE R7, #0H, CD3		; Check whether interrupt (INT0) was activated or not 
+	ACALL MOTOR_CD	; To close the case if it was once activated and back to MAIN programme
+	LJMP MAIN
+
+CD3:	ACALL SND_LINE
+	MOV DPTR,#SEC3			; Display 3rd second
+	ACALL WORD_STRING
+	ACALL DELAY_1SEC
+	CJNE R7, #0H, CD2		; Check whether interrupt (INT0) was activated or not 
+	ACALL MOTOR_CD	; To close the case if it was once activated and back to MAIN programme
+	LJMP MAIN
+
+CD2:	ACALL SND_LINE
+	MOV DPTR,#SEC2			; Display 2nd second
+	ACALL WORD_STRING
+	ACALL DELAY_1SEC
+	CJNE R7, #0H, CD1		; Check whether interrupt (INT0) was activated or not 
+	ACALL MOTOR_CD	; To close the case if it was once activated and back to MAIN programme
+	LJMP MAIN
+	
+CD1:	ACALL SND_LINE
+	MOV DPTR,#SEC1			; Display last second
+	ACALL WORD_STRING
+	ACALL DELAY_1SEC
+	
+WARNING:	ACALL LCD_ON		; Display warning on LCD display 
+		ACALL LINE_ONE    	; Force cursor on LCD to first line
+		MOV DPTR,#FORGET		
+		ACALL WORD_STRING
+		ACALL BUZZER1
+		ACALL MOTOR_CD
+
+LJMP MAIN
+
+; ****************Servo Motor *******************
+
+MOTOR_OD:	MOV R5, #40
+MOTOR_OD1:	MOV A, #00000001B		; Setup motor at PB0
+		MOV DPTR, #PB		
+		MOVX @DPTR, A
+		MOV TL0, #0D6H		; -90° with 0.6ms high pulse
+		MOV TH0, #0FDH		
+		ACALL DELAY_MOTOR	
+		MOV A, #00000000B		; Clear accumulator
+		MOV DPTR, #PB
+		MOVX @DPTR, A
+		MOV TL0, #029H		; 19.4ms low pulse
+		MOV TH0, #0BAH			
+		ACALL DELAY_MOTOR	
+		DJNZ R5, MOTOR_OD1	 
+		RET
+
+MOTOR_CD:	MOV R5, #40
+MOTOR_CD1:	MOV A, #00000001B		; Setup motor at PB0
+		MOV DPTR, #PB
+		MOVX @DPTR, A
+		MOV TL0, #000H		; +90° with 2.5ms high pulse
+		MOV TH0, #0F7H		
+		ACALL DELAY_MOTOR	
+		MOV A, #00000000B
+		MOV DPTR, #PB
+		MOVX @DPTR, A
+		MOV TL0, #0FFH		; 17.5ms low pulse
+		MOV TH0, #0C0H			
+		ACALL DELAY_MOTOR	
+		DJNZ R5, MOTOR_CD1	 
+		RET
+;****************
+; INT 0 and INT 1 
+;****************
+
+ORG 3FF0H	; Starting address for Interrupt 0 = 3FF0H
+MOV R7,#0H	; Clear Accumulator
+RETI	; Return to the place where it was interrupted
+
+ORG 3FF6H	; Starting address for Interrupt 0 = 3FF6H
+MOV R6,#0H	; Clear Accumulator
+RETI	
+
+END
